@@ -3,11 +3,20 @@ import Authenticator from '../utils/auth';
 import redisClient from '../utils/redis';
 
 async function getConnect(req, res) {
-  const user = await Authenticator.authenticate(req);
+  let user = null;
+
+  try {
+    user = await Authenticator.authenticate(req);
+  } catch (error) {
+    res.statusCode = 401;
+    res.send(JSON.stringify({ error: 'Unauthorized' }));
+    return;
+  }
 
   if (!user) {
     res.statusCode = 401;
     res.send(JSON.stringify({ error: 'Unauthorized' }));
+    return;
   }
 
   const token = uuidv4();

@@ -28,6 +28,10 @@ class Authenticator {
       .find({ email: data.email })
       .toArray();
 
+    if (!user[0]) {
+      return null;
+    }
+
     if (this.checkPassword(data.password, user[0].password)) {
       return user[0];
     }
