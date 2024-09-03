@@ -8,7 +8,7 @@ function getStatus(req, res) {
   data.db = dbClient.isAlive();
 
   res.statusCode = 200;
-  res.send(JSON.stringify(data));
+  res.json(data);
 }
 
 async function getStats(req, res) {
@@ -18,7 +18,7 @@ async function getStats(req, res) {
     files: await dbClient.nbFiles(),
   };
 
-  res.send(JSON.stringify(respData));
+  res.json(respData);
 }
 
 export { getStats };
