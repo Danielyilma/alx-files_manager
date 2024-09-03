@@ -1,49 +1,55 @@
-import dbClient from "./db";
-import { v4 as uuidv4 } from "uuid";
+import fs from 'fs';
+import { ObjectId } from 'mongodb';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import dbClient from './db';
 
-const FOLDER_PATH = process.env.FOLDER_PATH ?? "/tmp/file_manager";
+const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 
 async function validateFileForm(req, res, next) {
-  const FILETYPE = ["folder", "file", "image"];
-  const name = req.body.name;
-  const type = req.body.type;
-  const parentId = req.body.parentId ?? 0;
-  const isPublic = req.body.isPublic ?? false;
-  const data = req.body.data;
+  const FILETYPE = ['folder', 'file', 'image'];
+  const {
+    name, type,
+    parentId = 0,
+    isPublic = false,
+    data,
+  } = req.body;
 
   if (!name) {
-    req.statusCode = 400;
-    req.send(JSON.stringify({ error: "Missing name" }));
+    res.statusCode = 400;
+    res.send(JSON.stringify({ error: 'Missing name' }));
     return;
   }
 
   if (!(type || FILETYPE.includes(type))) {
-    req.statusCode = 400;
-    req.send(JSON.stringify({ error: "Missing type" }));
+    res.statusCode = 400;
+    res.send(JSON.stringify({ error: 'Missing type' }));
     return;
   }
 
-  if (type !== "folder" && !data) {
-    req.statusCode = 400;
-    req.send(JSON.stringify({ error: "Missing data" }));
+  if (type !== 'folder' && !data) {
+    res.statusCode = 400;
+    res.send(JSON.stringify({ error: 'Missing data' }));
     return;
   }
 
-  if (parentId != 0) {
-    const pFile = await dbClient.db
-      .collection("files")
-      .find({ parentId })
-      .toArray();
+  if (parentId !== 0) {
+    const pFile = (
+      await dbClient.db
+        .collection('files')
+        .find({ _id: ObjectId(parentId) })
+        .toArray()
+    )[0];
 
     if (!pFile) {
-      req.statusCode = 400;
-      req.send(JSON.stringify({ error: "Parent not found" }));
+      res.statusCode = 400;
+      res.send(JSON.stringify({ error: 'Parent not found' }));
       return;
     }
 
-    if (pFile.type !== "folder") {
-      req.statusCode = 400;
-      req.send(JSON.stringify({ error: "Parent is not a folder" }));
+    if (pFile.type !== 'folder') {
+      res.statusCode = 400;
+      res.send(JSON.stringify({ error: 'Parent is not a folder' }));
       return;
     }
   }
@@ -56,13 +62,24 @@ async function validateFileForm(req, res, next) {
     parentId,
   };
 
-  if (type !== "folder") {
-    file["localPath"] = FOLDER_PATH + "/" + uuidv4();
+  if (type !== 'folder') {
+    req.file.localPath = `${FOLDER_PATH}/${uuidv4()}`;
   }
 
   next();
 }
 
-async function CreateFileAndSave(path, data) {}
+function CreateFileAndSave(filePath, data) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFile(filePath, data, (err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+}
 
 export { validateFileForm, CreateFileAndSave };

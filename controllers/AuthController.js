@@ -1,29 +1,28 @@
-import Authenticator from "../utils/auth";
-import dbClient from "../utils/db";
-import redisClient from "../utils/redis";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
+import Authenticator from '../utils/auth';
+import redisClient from '../utils/redis';
 
 async function getConnect(req, res) {
   const user = await Authenticator.authenticate(req);
 
   if (!user) {
     res.statusCode = 401;
-    res.send(JSON.stringify({ error: "Unauthorized" }));
+    res.send(JSON.stringify({ error: 'Unauthorized' }));
   }
 
   const token = uuidv4();
-  const key = "auth_" + token;
+  const key = `auth_${token}`;
   const HOUR_24 = 3600 * 24;
   redisClient.set(key, user._id.toString(), HOUR_24);
 
   res.statusCode = 200;
-  res.send(JSON.stringify({ token: token }));
+  res.send(JSON.stringify({ token }));
 }
 
 async function getDisconnect(req, res) {
-  const X_token = "auth_" + req.headers["x-token"];
+  const XToken = `auth_${req.headers['x-token']}`;
 
-  await redisClient.del(X_token);
+  await redisClient.del(XToken);
   res.statusCode = 204;
   res.send();
 }
