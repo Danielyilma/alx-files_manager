@@ -1,34 +1,48 @@
-import { Router } from "express";
-import { getStats, getStatus } from "../controllers/AppController";
-import { postNew } from "../controllers/UsersController";
+import { Router } from 'express';
+import { getStats, getStatus } from '../controllers/AppController';
+import { postNew } from '../controllers/UsersController';
 import {
   getConnect,
   getDisconnect,
   getMe,
-} from "../controllers/AuthController";
-import Authenticator from "../utils/auth";
-import { postUpload } from "../controllers/FilesController";
-import { validateFileForm } from "../utils/fileUpload";
+} from '../controllers/AuthController';
+import Authenticator from '../utils/auth';
+import {
+  postUpload,
+  getShow,
+  getIndex,
+  putPublish,
+  putUnPublish,
+} from '../controllers/FilesController';
+import { validateFileForm } from '../utils/fileUpload';
 
 const router = Router();
 
-router.get("/status", getStatus);
+router.get('/status', getStatus);
 
-router.get("/stats", getStats);
+router.get('/stats', getStats);
 
-router.get("/connect", getConnect);
+router.get('/connect', getConnect);
 
-router.get("/disconnect", Authenticator.isAuthenticated, getDisconnect);
+router.get('/disconnect', Authenticator.isAuthenticated, getDisconnect);
 
-router.get("/users/me", Authenticator.isAuthenticated, getMe);
+router.get('/users/me', Authenticator.isAuthenticated, getMe);
 
-router.post("/users", postNew);
+router.get('/files/:id', Authenticator.isAuthenticated, getShow);
+
+router.get('/files', Authenticator.isAuthenticated, getIndex);
+
+router.post('/users', postNew);
 
 router.post(
-  "/files",
+  '/files',
   Authenticator.isAuthenticated,
   validateFileForm,
-  postUpload
+  postUpload,
 );
+
+router.put('/files/:id/publish', Authenticator.isAuthenticated, putPublish);
+
+router.put('/files/:id/unpublish', Authenticator.isAuthenticated, putUnPublish);
 
 export default router;
