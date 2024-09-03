@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getStats, getStatus } from '../controllers/AppController';
-import { postNew } from '../controllers/UsersController';
+import postNew from '../controllers/UsersController';
 import {
   getConnect,
   getDisconnect,

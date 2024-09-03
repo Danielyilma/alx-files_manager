@@ -1,37 +1,38 @@
-import dbClient from "../utils/db";
-import sha1 from "sha1";
+import sha1 from 'sha1';
+import dbClient from '../utils/db';
 
 async function postNew(req, res) {
-  const email = req.body.email;
-  const password = req.body.password;
+  const { email, password } = req.body;
 
   if (!email) {
     res.statusCode = 400;
-    res.send({ error: "Missing email" });
+    res.send({ error: 'Missing email' });
     return;
-  } else if (!password) {
+  }
+
+  if (!password) {
     res.statusCode = 400;
-    res.send({ error: "Missing password" });
+    res.send({ error: 'Missing password' });
     return;
   }
 
   const user = await dbClient.db
-    .collection("users")
-    .find({ email: email })
+    .collection('users')
+    .find({ email })
     .toArray();
 
   if (user[0]) {
     res.statusCode = 400;
-    res.send({ error: "Already exist" });
+    res.send({ error: 'Already exist' });
     return;
   }
 
-  const data = await dbClient.db.collection("users").insertOne({
-    email: email,
+  const data = await dbClient.db.collection('users').insertOne({
+    email,
     password: sha1(password),
   });
   res.statusCode = 201;
-  res.send(JSON.stringify({ id: data.ops[0]._id, email: email }));
+  res.send(JSON.stringify({ id: data.ops[0]._id, email }));
 }
 
-export { postNew };
+export default postNew;

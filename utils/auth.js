@@ -1,13 +1,13 @@
-import sha1 from "sha1";
-import dbClient from "./db";
-import redisClient from "./redis";
-import { ObjectId } from "mongodb";
+import sha1 from 'sha1';
+import { ObjectId } from 'mongodb';
+import dbClient from './db';
+import redisClient from './redis';
 
-class Authenticate {
-  getAuthHeader(request) {
-    const authKey = request.headers.authorization.split(" ")[1];
-    const buf = Buffer.from(authKey, "base64");
-    const authHeader = buf.toString().split(":");
+class Authenticator {
+  static getAuthHeader(request) {
+    const authKey = request.headers.authorization.split(' ')[1];
+    const buf = Buffer.from(authKey, 'base64');
+    const authHeader = buf.toString().split(':');
 
     return {
       email: authHeader[0],
@@ -15,16 +15,16 @@ class Authenticate {
     };
   }
 
-  checkPassword(password, hashed_password) {
-    const new_hash = sha1(password);
+  static checkPassword(password, hashedPassword) {
+    const newHash = sha1(password);
 
-    return new_hash === hashed_password;
+    return newHash === hashedPassword;
   }
 
-  async authenticate(request) {
+  static async authenticate(request) {
     const data = this.getAuthHeader(request);
     const user = await dbClient.db
-      .collection("users")
+      .collection('users')
       .find({ email: data.email })
       .toArray();
 
@@ -35,26 +35,26 @@ class Authenticate {
     return null;
   }
 
-  async isAuthenticated(req, res, next) {
-    const X_token = "auth_" + req.headers["x-token"];
-    const user_id = await redisClient.get(X_token);
-    const user = await dbClient.db
-      .collection("users")
-      .find({ _id: ObjectId(user_id) })
-      .toArray();
+  static async isAuthenticated(req, res, next) {
+    const XToken = `auth_${req.headers['x-token']}`;
+    const userId = await redisClient.get(XToken);
+    const user = (
+      await dbClient.db
+        .collection('users')
+        .find({ _id: ObjectId(userId) })
+        .toArray()
+    )[0];
 
     if (!user[0]) {
       res.statusCode = 401;
-      res.send(JSON.stringify({ error: "Unauthorized" }));
+      res.send(JSON.stringify({ error: 'Unauthorized' }));
       return;
     }
 
-    req.user = user[0];
+    req.user = user;
 
     next();
   }
 }
-
-const Authenticator = new Authenticate();
 
 export default Authenticator;
