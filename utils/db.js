@@ -1,12 +1,14 @@
-import { MongoClient } from "mongodb";
+import { MongoClient } from 'mongodb';
 
 class DBClient {
   constructor() {
-    this.host = process.env.DB_HOST ?? 'localhost';
-    this.port = process.env.DB_PORT ?? 27017;
-    this.dbname = process.env.DB_DATABASE ?? "files_manager";
+    this.host = process.env.DB_HOST || 'localhost';
+    this.port = process.env.DB_PORT || 27017;
+    this.dbname = process.env.DB_DATABASE || 'files_manager';
 
-    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, { useUnifiedTopology: true });
+    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, {
+      useUnifiedTopology: true,
+    });
     this.connect();
   }
 
@@ -15,7 +17,7 @@ class DBClient {
       await this.client.connect();
       this.db = this.client.db(this.dbname);
     } catch (err) {
-        console.log(err)
+      console.log(err);
     }
   }
 
@@ -24,11 +26,11 @@ class DBClient {
   }
 
   async nbUsers() {
-    return await this.db.collection("users").countDocuments();
+    return this.db.collection('users').countDocuments();
   }
 
   async nbFiles() {
-    return await this.db.collection("files").countDocuments();
+    return this.db.collection('files').countDocuments();
   }
 }
 
