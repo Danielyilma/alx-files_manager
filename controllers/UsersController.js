@@ -6,13 +6,13 @@ async function postNew(req, res) {
 
   if (!email) {
     res.statusCode = 400;
-    res.send({ error: 'Missing email' });
+    res.json({ error: 'Missing email' });
     return;
   }
 
   if (!password) {
     res.statusCode = 400;
-    res.send({ error: 'Missing password' });
+    res.json({ error: 'Missing password' });
     return;
   }
 
@@ -23,7 +23,7 @@ async function postNew(req, res) {
 
   if (user[0]) {
     res.statusCode = 400;
-    res.send({ error: 'Already exist' });
+    res.json({ error: 'Already exist' });
     return;
   }
 
@@ -32,7 +32,7 @@ async function postNew(req, res) {
     password: sha1(password),
   });
   res.statusCode = 201;
-  res.send(JSON.stringify({ id: data.ops[0]._id, email }));
+  res.json({ id: data.ops[0]._id, email });
 }
 
 export default postNew;
