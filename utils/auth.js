@@ -45,7 +45,7 @@ class Authenticator {
         .toArray()
     )[0];
 
-    if (!user[0]) {
+    if (!user) {
       res.statusCode = 401;
       res.send(JSON.stringify({ error: 'Unauthorized' }));
       return;
