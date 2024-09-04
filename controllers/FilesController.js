@@ -146,7 +146,8 @@ async function getFile(req, res) {
       return;
     }
 
-    res.set('content-type', mime.lookup(file.name));
+    const contentType = mime.lookup(file.name) || 'application/octet-stream';
+    res.set('content-type', contentType);
     res.send(data);
     return;
   }
