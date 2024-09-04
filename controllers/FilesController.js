@@ -1,13 +1,15 @@
 import { ObjectId } from 'mongodb';
+import mime from 'mime-types';
 import dbClient from '../utils/db';
-import { CreateFileAndSave } from '../utils/fileUpload';
+import { CreateFileAndSave, readFileData } from '../utils/fileUpload';
+import Authenticator from '../utils/auth';
 
 async function postUpload(req, res) {
   const { file } = req;
   if (file.type === 'folder') {
     const resData = await dbClient.db.collection('files').insertOne(file);
     res.statusCode = 201;
-    res.send(JSON.stringify(resData.ops[0]));
+    res.json(resData.ops[0]);
     return;
   }
 
@@ -27,7 +29,7 @@ async function postUpload(req, res) {
 
   delete resData.localPath;
   res.statusCode = 201;
-  res.send(JSON.stringify(resData));
+  res.json(resData);
 }
 
 async function getShow(req, res) {
@@ -45,11 +47,11 @@ async function getShow(req, res) {
 
   if (!file) {
     res.statusCode = 404;
-    res.send({ error: 'Not found' });
+    res.json({ error: 'Not found' });
   }
 
   res.statusCode = 200;
-  res.send(JSON.stringify(file));
+  res.json(file);
 }
 
 async function getIndex(req, res) {
@@ -63,7 +65,7 @@ async function getIndex(req, res) {
     .toArray();
 
   res.statusCode = 200;
-  res.send(JSON.stringify(files));
+  res.json(files);
 }
 
 async function putPublish(req, res) {
@@ -79,7 +81,7 @@ async function putPublish(req, res) {
   );
 
   res.statusCode = 200;
-  res.send(JSON.stringify(updatedFile.value));
+  res.json(updatedFile.value || {});
 }
 
 async function putUnPublish(req, res) {
@@ -95,8 +97,56 @@ async function putUnPublish(req, res) {
   );
 
   res.statusCode = 200;
-  res.send(JSON.stringify(updatedFile.value));
+  res.send(JSON.stringify(updatedFile.value || {}));
 }
+
+async function getFile(req, res) {
+  const fileId = req.params.id;
+  const file = (
+    await dbClient.db
+      .collection('files')
+      .find({ _id: ObjectId(fileId) })
+      .toArray()
+  )[0];
+
+  if (!file) {
+    res.statusCode = 404;
+    res.json({ error: 'Not found' });
+    return;
+  }
+
+  if (file.type === 'folder') {
+    res.statusCode = 400;
+    res.json({ error: "A folder doesn't have content" });
+    return;
+  }
+
+  if (file.isPublic === true) {
+    const data = await readFileData(file.localPath);
+    res.set('content-type', mime.lookup(file.name));
+    res.send(data);
+    return;
+  }
+
+  const user = await Authenticator.authenticate(req);
+
+  if (!user) {
+    res.statusCode = 404;
+    res.json({ error: 'Not found' });
+    return;
+  }
+
+  if (user._id.toString() === file.userId) {
+    res.statusCode = 404;
+    res.json({ error: 'Not found' });
+    return;
+  }
+
+  const data = await readFileData(file.localPath);
+  res.set('content-type', mime.lookup(file.name));
+  res.send(data);
+}
+
 export {
-  postUpload, getIndex, getShow, putPublish, putUnPublish,
+  postUpload, getIndex, getShow, putPublish, putUnPublish, getFile,
 };
