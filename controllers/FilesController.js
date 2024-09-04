@@ -60,7 +60,7 @@ async function getShow(req, res) {
 }
 
 async function getIndex(req, res) {
-  const parentId = parseInt(req.query.parentId) || 0;
+  const parentId = req.query.parentId || 0;
   const page = parseInt(req.query.page) || 0;
   const limit = 20;
   const files = await dbClient.db
