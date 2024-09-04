@@ -2,6 +2,7 @@ import fs from 'fs';
 import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import { promisify } from 'util';
 import dbClient from './db';
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -9,10 +10,7 @@ const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 async function validateFileForm(req, res, next) {
   const FILETYPE = ['folder', 'file', 'image'];
   const {
-    name, type,
-    parentId = 0,
-    isPublic = false,
-    data,
+    name, type, parentId = 0, isPublic = false, data,
   } = req.body;
 
   if (!name) {
@@ -82,4 +80,16 @@ function CreateFileAndSave(filePath, data) {
   });
 }
 
-export { validateFileForm, CreateFileAndSave };
+async function readFileData(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    const readFile = promisify(fs.readFile);
+    return readFile(filePath, 'utf-8');
+  } catch (error) {
+    return null;
+  }
+}
+export { validateFileForm, CreateFileAndSave, readFileData };

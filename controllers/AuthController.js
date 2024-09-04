@@ -9,13 +9,13 @@ async function getConnect(req, res) {
     user = await Authenticator.authenticate(req);
   } catch (error) {
     res.statusCode = 401;
-    res.send(JSON.stringify({ error: 'Unauthorized' }));
+    res.json({ error: 'Unauthorized' });
     return;
   }
 
   if (!user) {
     res.statusCode = 401;
-    res.send(JSON.stringify({ error: 'Unauthorized' }));
+    res.json({ error: 'Unauthorized' });
     return;
   }
 
@@ -25,7 +25,7 @@ async function getConnect(req, res) {
   redisClient.set(key, user._id.toString(), HOUR_24);
 
   res.statusCode = 200;
-  res.send(JSON.stringify({ token }));
+  res.json({ token });
 }
 
 async function getDisconnect(req, res) {
@@ -33,12 +33,12 @@ async function getDisconnect(req, res) {
 
   await redisClient.del(XToken);
   res.statusCode = 204;
-  res.send();
+  res.json();
 }
 
 async function getMe(req, res) {
   res.statusCode = 200;
-  res.send(JSON.stringify({ email: req.user.email, id: req.user._id }));
+  res.json({ email: req.user.email, id: req.user._id });
 }
 
 export { getConnect, getDisconnect, getMe };

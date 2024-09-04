@@ -51,7 +51,7 @@ class Authenticator {
 
     if (!user) {
       res.statusCode = 401;
-      res.send(JSON.stringify({ error: 'Unauthorized' }));
+      res.json({ error: 'Unauthorized' });
       return;
     }
 

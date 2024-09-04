@@ -13,6 +13,7 @@ import {
   getIndex,
   putPublish,
   putUnPublish,
+  getFile,
 } from '../controllers/FilesController';
 import { validateFileForm } from '../utils/fileUpload';
 
@@ -31,6 +32,8 @@ router.get('/users/me', Authenticator.isAuthenticated, getMe);
 router.get('/files/:id', Authenticator.isAuthenticated, getShow);
 
 router.get('/files', Authenticator.isAuthenticated, getIndex);
+
+router.get('/files/:id/data', getFile);
 
 router.post('/users', postNew);
 
