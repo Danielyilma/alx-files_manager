@@ -91,6 +91,10 @@ async function putPublish(req, res) {
     },
   );
 
+  if (!updatedFile.value) {
+    abort(res, 404, 'Not found');
+  }
+
   res.statusCode = 200;
   res.json(updatedFile.value || {});
 }
@@ -107,8 +111,12 @@ async function putUnPublish(req, res) {
     },
   );
 
+  if (!updatedFile.value) {
+    abort(res, 404, 'Not found');
+  }
+
   res.statusCode = 200;
-  res.send(JSON.stringify(updatedFile.value || {}));
+  res.json(updatedFile.value || {});
 }
 
 async function getFile(req, res) {
