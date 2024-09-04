@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { promisify } from 'util';
 import dbClient from './db';
+import abort from './abort';
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 
@@ -14,20 +15,17 @@ async function validateFileForm(req, res, next) {
   } = req.body;
 
   if (!name) {
-    res.statusCode = 400;
-    res.send(JSON.stringify({ error: 'Missing name' }));
+    abort(res, 400, 'Missing name');
     return;
   }
 
   if (!(type || FILETYPE.includes(type))) {
-    res.statusCode = 400;
-    res.send(JSON.stringify({ error: 'Missing type' }));
+    abort(res, 400, 'Missing type');
     return;
   }
 
   if (type !== 'folder' && !data) {
-    res.statusCode = 400;
-    res.send(JSON.stringify({ error: 'Missing data' }));
+    abort(res, 400, 'Missing data');
     return;
   }
 
@@ -40,14 +38,12 @@ async function validateFileForm(req, res, next) {
     )[0];
 
     if (!pFile) {
-      res.statusCode = 400;
-      res.send(JSON.stringify({ error: 'Parent not found' }));
+      abort(res, 400, 'Parent not found');
       return;
     }
 
     if (pFile.type !== 'folder') {
-      res.statusCode = 400;
-      res.send(JSON.stringify({ error: 'Parent is not a folder' }));
+      abort(res, 400, 'Parent is not a folder');
       return;
     }
   }

@@ -2,7 +2,8 @@ import { ObjectId } from 'mongodb';
 import mime from 'mime-types';
 import dbClient from '../utils/db';
 import { CreateFileAndSave, readFileData } from '../utils/fileUpload';
-import Authenticator from '../utils/auth';
+import abort from '../utils/abort';
+import redisClient from '../utils/redis';
 
 async function postUpload(req, res) {
   const { file } = req;
@@ -46,8 +47,8 @@ async function getShow(req, res) {
   )[0];
 
   if (!file) {
-    res.statusCode = 404;
-    res.json({ error: 'Not found' });
+    abort(res, 404, 'Not found');
+    return;
   }
 
   res.statusCode = 200;
@@ -110,39 +111,43 @@ async function getFile(req, res) {
   )[0];
 
   if (!file) {
-    res.statusCode = 404;
-    res.json({ error: 'Not found' });
+    abort(res, 404, 'Not found');
     return;
   }
 
   if (file.type === 'folder') {
-    res.statusCode = 400;
-    res.json({ error: "A folder doesn't have content" });
+    abort(res, 400, "A folder doesn't have content");
     return;
   }
 
   if (file.isPublic === true) {
     const data = await readFileData(file.localPath);
+
+    if (!data) {
+      abort(res, 404, 'Not found');
+      return;
+    }
+
     res.set('content-type', mime.lookup(file.name));
     res.send(data);
     return;
   }
 
-  const user = await Authenticator.authenticate(req);
+  const XToken = `auth_${req.headers['x-token']}`;
+  const userId = await redisClient.get(XToken);
 
-  if (!user) {
-    res.statusCode = 404;
-    res.json({ error: 'Not found' });
-    return;
-  }
-
-  if (user._id.toString() === file.userId) {
-    res.statusCode = 404;
-    res.json({ error: 'Not found' });
+  if (!userId || userId !== file.userId.toString()) {
+    abort(res, 404, 'Not found');
     return;
   }
 
   const data = await readFileData(file.localPath);
+
+  if (!data) {
+    abort(res, 404, 'Not found');
+    return;
+  }
+
   res.set('content-type', mime.lookup(file.name));
   res.send(data);
 }

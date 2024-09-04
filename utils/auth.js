@@ -2,6 +2,7 @@ import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
 import dbClient from './db';
 import redisClient from './redis';
+import abort from './abort';
 
 class Authenticator {
   static getAuthHeader(request) {
@@ -50,8 +51,7 @@ class Authenticator {
     )[0];
 
     if (!user) {
-      res.statusCode = 401;
-      res.json({ error: 'Unauthorized' });
+      abort(res, 401, 'Unauthorized');
       return;
     }
 

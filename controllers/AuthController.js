@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Authenticator from '../utils/auth';
 import redisClient from '../utils/redis';
+import abort from '../utils/abort';
 
 async function getConnect(req, res) {
   let user = null;
@@ -8,14 +9,12 @@ async function getConnect(req, res) {
   try {
     user = await Authenticator.authenticate(req);
   } catch (error) {
-    res.statusCode = 401;
-    res.json({ error: 'Unauthorized' });
+    abort(res, 401, 'Unauthorized');
     return;
   }
 
   if (!user) {
-    res.statusCode = 401;
-    res.json({ error: 'Unauthorized' });
+    abort(res, 401, 'Unauthorized');
     return;
   }
 
