@@ -8,9 +8,12 @@ import redisClient from '../utils/redis';
 async function postUpload(req, res) {
   const { file } = req;
   if (file.type === 'folder') {
-    const resData = await dbClient.db.collection('files').insertOne(file);
+    let resData = (await dbClient.db.collection('files').insertOne(file))
+      .ops[0];
+    resData = { id: resData._id, ...resData };
+    delete resData._id;
     res.statusCode = 201;
-    res.json(resData.ops[0]);
+    res.json(resData);
     return;
   }
 
@@ -25,10 +28,11 @@ async function postUpload(req, res) {
   }
 
   CreateFileAndSave(file.localPath, data);
-  const resData = (await dbClient.db.collection('files').insertOne(file))
-    .ops[0];
+  let resData = (await dbClient.db.collection('files').insertOne(file)).ops[0];
 
+  resData = { id: resData._id, ...resData };
   delete resData.localPath;
+  delete resData._id;
   res.statusCode = 201;
   res.json(resData);
 }
