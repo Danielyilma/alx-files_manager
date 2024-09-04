@@ -60,15 +60,22 @@ async function getShow(req, res) {
 }
 
 async function getIndex(req, res) {
-  const { parentId = 0, page = 0 } = req.query;
+  const parentId = parseInt(req.query.parentId) || 0;
+  const page = parseInt(req.query.page) || 0;
   const limit = 20;
   const files = await dbClient.db
     .collection('files')
-    .find({ userId: req.user._id, parentId }, { projection: { localPath: 0 } })
+    .find({ userId: req.user._id, parentId: String(parentId) }, { projection: { localPath: 0 } })
     .skip(page * limit)
     .limit(limit)
     .toArray();
+  
+  files.map((item) => {
+    item.id = item._id;
+    delete item._id
+  })
 
+  console.log(req.user._id, parentId)
   res.statusCode = 200;
   res.json(files);
 }
